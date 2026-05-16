@@ -157,9 +157,5 @@ MobileNetV2 → Softmax
 
 ## 👤 Developer
 
-Developed as a university final year AI project.  
-Suitable for portfolio, hackathon demo, or production extension.
-
+Developed as a university AI project by HATIM NADIR.  
 ---
-
-© 2024 MaskSense AI — All rights reserved
