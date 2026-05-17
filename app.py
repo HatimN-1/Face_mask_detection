@@ -528,7 +528,7 @@ def load_keras_model(path: str):
     if not os.path.exists(path):
         return None, f"Model file not found: {path}"
     try:
-        model = keras.models.load_model(path)
+        model = keras.models.load_model(path, compile=False)
         return model, None
     except Exception as e:
         return None, str(e)
@@ -569,8 +569,8 @@ def detect_and_predict(frame, cascade, model, conf_threshold=0.5):
 
         # Binary output: [mask_prob, no_mask_prob] OR single sigmoid
         if len(pred) == 1:
-            mask_prob = float(pred[0])
-            no_mask_prob = 1.0 - mask_prob
+            no_mask_prob = float(pred[0])
+            mask_prob = 1.0 - no_mask_prob
         else:
             mask_prob = float(pred[0])
             no_mask_prob = float(pred[1])
