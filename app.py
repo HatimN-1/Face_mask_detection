@@ -1430,7 +1430,7 @@ def main():
     if page == "Dashboard":
         page_dashboard()
     elif page == "Live Detection":
-        page_live()
+        page_webrtc_camera()
     elif page == "Upload Media":
         page_upload()
     elif page == "Analytics":
@@ -1439,8 +1439,7 @@ def main():
         page_model()
     elif page == "Settings":
         page_settings()
-    elif page == "Live Detection":
-        page_webrtc_camera()
+
 
     render_footer()
 
