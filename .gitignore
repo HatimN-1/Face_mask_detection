@@ -1,0 +1,21 @@
+__pycache__/
+.venv/
+venv/
+.idea/
+*.pyc
+dataset/
+dataset_split/
+test/
+*.jpg
+*.jpeg
+*.png
+*.mp4
+*.avi# created by virtualenv automatically
+.venv/etc
+train.py
+utils.py
+webcam.py
+test.jpg
+split_dataset.py
+predict.py
+hh
