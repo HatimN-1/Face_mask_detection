@@ -14,7 +14,6 @@ import io
 import os
 import base64
 from collections import deque
-
 # ──────────────────────────────────────────────────────────────
 # PAGE CONFIG — must be first Streamlit call
 # ──────────────────────────────────────────────────────────────
@@ -565,10 +564,10 @@ def detect_and_predict(frame, cascade, model, conf_threshold=0.5):
         face_arr = np.expand_dims(face_res / 255.0, axis=0).astype(np.float32)
 
         # Predict
-        pred = model.predict(face_arr, verbose=0)[0]
+        pred = np.array(model.predict(face_arr, verbose=0)).flatten()
 
         # Binary output: [mask_prob, no_mask_prob] OR single sigmoid
-        if len(pred) == 1:
+        if pred.size == 1:
             no_mask_prob = float(pred[0])
             mask_prob = 1.0 - no_mask_prob
         else:
@@ -997,6 +996,9 @@ def page_upload():
         if uploaded:
             file_bytes = np.frombuffer(uploaded.read(), np.uint8)
             img_bgr    = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+            if img_bgr is None:
+                st.error("Impossible de lire cette image. Essaie avec une image JPG ou PNG standard.")
+                return
 
             with st.spinner("🔍 Running detection..."):
                 annotated, results = preprocess_image_for_prediction(
