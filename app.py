@@ -1430,7 +1430,7 @@ def main():
     if page == "Dashboard":
         page_dashboard()
     elif page == "Live Detection":
-        page_webrtc_camera()
+        page_browser_camera()
     elif page == "Upload Media":
         page_upload()
     elif page == "Analytics":
