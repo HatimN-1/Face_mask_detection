@@ -14,6 +14,8 @@ import io
 import os
 import base64
 from collections import deque
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
+import av
 # ──────────────────────────────────────────────────────────────
 # PAGE CONFIG — must be first Streamlit call
 # ──────────────────────────────────────────────────────────────
@@ -597,6 +599,44 @@ def detect_and_predict(frame, cascade, model, conf_threshold=0.5):
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
 
     return frame, results
+
+class MaskVideoProcessor(VideoProcessorBase):
+    def __init__(self):
+        self.model, self.model_err = load_keras_model(MODEL_PATH)
+        self.cascade, self.cas_err = load_cascade(CASCADE_PATH)
+
+    def recv(self, frame):
+        img = frame.to_ndarray(format="bgr24")
+
+        if self.model is not None and self.cascade is not None:
+            img, results = detect_and_predict(
+                img,
+                self.cascade,
+                self.model,
+                st.session_state.conf_threshold
+            )
+
+        return av.VideoFrame.from_ndarray(img, format="bgr24")
+
+def page_webrtc_camera():
+    st.markdown("## 📷 Live Camera Detection")
+
+    st.info("Clique sur START puis autorise l'accès caméra dans ton navigateur.")
+
+    RTC_CONFIGURATION = RTCConfiguration({
+        "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
+    })
+
+    webrtc_streamer(
+        key="face-mask-camera",
+        video_processor_factory=MaskVideoProcessor,
+        rtc_configuration=RTC_CONFIGURATION,
+        media_stream_constraints={
+            "video": True,
+            "audio": False,
+        },
+        async_processing=True,
+    )
 
 def preprocess_image_for_prediction(img_bgr, cascade, model, conf_threshold=0.5):
     """Run detection on a still image."""
@@ -1341,6 +1381,45 @@ def render_footer():
     </div>
     """, unsafe_allow_html=True)
 
+def page_browser_camera():
+    st.markdown("## 📷 Camera Detection")
+
+    model, model_err = load_keras_model(MODEL_PATH)
+    cascade, cas_err = load_cascade(CASCADE_PATH)
+
+    if model_err or cas_err:
+        st.error("Model or Cascade not loaded.")
+        return
+
+    img_file = st.camera_input("Take a picture")
+
+    if img_file is not None:
+        bytes_data = img_file.getvalue()
+        img_bgr = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
+
+        if img_bgr is None:
+            st.error("Impossible de lire l'image.")
+            return
+
+        annotated, results = preprocess_image_for_prediction(
+            img_bgr,
+            cascade,
+            model,
+            st.session_state.conf_threshold
+        )
+
+        st.image(
+            cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB),
+            caption="Detection result",
+            use_container_width=True
+        )
+
+        if results:
+            for i, r in enumerate(results, 1):
+                st.success(f"Face {i}: {r['label']} — {r['conf']*100:.1f}%")
+        else:
+            st.warning("No face detected.")
+
 # ──────────────────────────────────────────────────────────────
 # MAIN
 # ──────────────────────────────────────────────────────────────
@@ -1360,6 +1439,8 @@ def main():
         page_model()
     elif page == "Settings":
         page_settings()
+    elif page == "Live Detection":
+        page_webrtc_camera()
 
     render_footer()
 
