@@ -21,7 +21,7 @@ import av
 # ──────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="MaskSense AI · Face Mask Detection",
-    page_icon="😷",
+    page_icon="M",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -56,9 +56,26 @@ MODEL_PATH = "model/mask_model.h5"
 CASCADE_PATH = "haarcascade/haarcascade_frontalface_default.xml"
 IMG_SIZE = (224, 224)
 HISTORY_MAXLEN = 200
-CLASS_LABELS = ["Mask 😷", "No Mask ❌"]
+CLASS_LABELS = ["Mask ◉", "No Mask ❌"]
 MASK_COLOR = (0, 220, 100)      # green BGR
 NO_MASK_COLOR = (0, 50, 255)    # red BGR
+
+LOGO_PATH = "assets/logo158.png"
+
+def img_to_base64(path: str) -> str:
+    """Convert local image to base64 for reliable display in Streamlit HTML."""
+    try:
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    except Exception:
+        return ""
+
+def logo_html(width: int = 92, css_class: str = "app-logo") -> str:
+    b64 = img_to_base64(LOGO_PATH)
+    if b64:
+        return f'<img class="{css_class}" src="data:image/png;base64,{b64}" width="{width}" />'
+    return '<div class="logo-fallback">M</div>'
+
 
 # ──────────────────────────────────────────────────────────────
 # CSS — DARK FUTURISTIC GLASSMORPHISM THEME
@@ -490,6 +507,59 @@ h3 { font-size: 1.3rem !important; }
 .dot-red    { background: var(--accent-red);   box-shadow: 0 0 8px var(--accent-red);   animation: blink 0.7s ease-in-out infinite; }
 .dot-idle   { background: var(--text-dim); }
 @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+/* ── Professional logo ── */
+.app-logo {
+    display: block;
+    margin: 0 auto;
+    filter: drop-shadow(0 0 14px rgba(0,229,255,0.45));
+    border-radius: 10px;
+}
+.logo-fallback {
+    margin: 0 auto;
+    width: 76px; height: 76px;
+    display:flex; align-items:center; justify-content:center;
+    border: 2px solid var(--accent-cyan);
+    color: var(--accent-cyan);
+    font-family: var(--font-head);
+    font-size: 2.2rem;
+    font-weight: 700;
+    border-radius: 14px;
+    box-shadow: 0 0 22px rgba(0,229,255,0.35);
+}
+.hero-logo-wrap {
+    text-align:center;
+    padding: 1.1rem 0 0.5rem;
+}
+.hero-logo-wrap img {
+    max-width: 230px;
+    border-radius: 18px;
+    filter: drop-shadow(0 0 28px rgba(0,229,255,0.45));
+}
+
+/* ── Sidebar polish: remove default radio dots and style choices ── */
+[data-testid="stSidebar"] [role="radiogroup"] label {
+    background: transparent !important;
+    border-radius: 10px !important;
+    padding: 0.45rem 0.55rem !important;
+    margin-bottom: 0.18rem !important;
+    transition: all .22s ease !important;
+}
+[data-testid="stSidebar"] [role="radiogroup"] label:hover {
+    background: rgba(255,255,255,0.06) !important;
+}
+[data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) {
+    background: rgba(0,229,255,0.10) !important;
+    border: 1px solid rgba(0,229,255,0.12) !important;
+}
+[data-testid="stSidebar"] [role="radiogroup"] label > div:first-child {
+    display: none !important;
+}
+[data-testid="stSidebar"] [role="radiogroup"] label p {
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
+}
+
 </style>
 """
 
@@ -577,7 +647,7 @@ def detect_and_predict(frame, cascade, model, conf_threshold=0.5):
             no_mask_prob = float(pred[1])
 
         if mask_prob >= no_mask_prob:
-            label = "Mask 😷"
+            label = "Mask ◉"
             conf  = mask_prob
             color = MASK_COLOR
         else:
@@ -688,28 +758,28 @@ def render_confidence_gauge(conf: float, label: str):
 def render_sidebar():
     with st.sidebar:
         # Logo
-        st.markdown("""
+        st.markdown(f"""
         <div class="sb-logo">
-            <div class="icon-ring">😷</div>
+            {logo_html(105)}
             <span class="app-name">MASKSENSE</span>
-            <div class="app-tagline">AI · Detection System</div>
+            <div class="app-tagline">AI DETECTION SYSTEM</div>
         </div>
         <div class="neon-sep"></div>
         """, unsafe_allow_html=True)
 
         # Navigation
-        st.markdown("### ⬡  NAVIGATION")
+        st.markdown("### NAVIGATION")
         page = st.radio(
-            label="",
-            options=["🏠  Dashboard", "📷  Live Detection", "📂  Upload Media",
-                     "📊  Analytics", "🧠  AI Model", "⚙️  Settings"],
+            label="Navigation",
+            options=["⌂  Dashboard", "▣  Live Detection", "□  Upload Media",
+                     "▥  Analytics", "◌  AI Model", "⚙  Settings"],
             label_visibility="collapsed",
         )
 
         st.markdown('<div class="neon-sep"></div>', unsafe_allow_html=True)
 
         # Camera settings
-        st.markdown("### ⚙  CAMERA SETTINGS")
+        st.markdown("### CAMERA SETTINGS")
         st.session_state.conf_threshold = st.slider(
             "Confidence Threshold", 0.30, 0.99, st.session_state.conf_threshold, 0.01,
             help="Minimum confidence to display prediction"
@@ -723,7 +793,7 @@ def render_sidebar():
         st.markdown('<div class="neon-sep"></div>', unsafe_allow_html=True)
 
         # Status
-        st.markdown("### ◉  STATUS")
+        st.markdown("### STATUS")
         if st.session_state.cam_running and not st.session_state.cam_paused:
             st.markdown('<span class="status-dot dot-green"></span>**LIVE**', unsafe_allow_html=True)
         elif st.session_state.cam_paused:
@@ -737,7 +807,7 @@ def render_sidebar():
         st.markdown('<div class="neon-sep"></div>', unsafe_allow_html=True)
 
         # Model info
-        with st.expander("🧠 Model Info"):
+        with st.expander("Model Info"):
             st.markdown("""
             **Architecture:** MobileNetV2  
             **Task:** Binary Classification  
@@ -747,14 +817,14 @@ def render_sidebar():
             """)
 
         # About
-        with st.expander("ℹ️ About"):
+        with st.expander("About"):
             st.markdown("""
             MaskSense AI uses deep learning to detect
             face masks in real time. Built for public
             safety monitoring and AI portfolio demos.
 
             ---
-            🔗 [GitHub](#) · [LinkedIn](#)
+            GitHub · LinkedIn
             """)
 
     return page.split("  ")[-1].strip()
@@ -765,23 +835,24 @@ def render_sidebar():
 
 def page_dashboard():
     # Hero
-    st.markdown("""
+    st.markdown(f"""
     <div class="hero-section">
+        <div class="hero-logo-wrap">{logo_html(240)}</div>
         <div class="hero-title">MASKSENSE AI</div>
-        <div class="hero-subtitle">Real-Time Face Mask Detection · Powered by MobileNetV2</div>
+        <div class="hero-subtitle">FACE MASK DETECTION SYSTEM</div>
         <div class="hero-divider"></div>
     </div>
     """, unsafe_allow_html=True)
 
     # Stats row
     c1, c2, c3, c4, c5 = st.columns(5)
-    with c1: render_metric("👁", st.session_state.total_frames, "Frames Processed")
-    with c2: render_metric("👤", st.session_state.total_faces,  "Faces Detected")
-    with c3: render_metric("😷", st.session_state.mask_count,   "Masks Found")
+    with c1: render_metric("▥", st.session_state.total_frames, "Frames Processed")
+    with c2: render_metric("○", st.session_state.total_faces,  "Faces Detected")
+    with c3: render_metric("◉", st.session_state.mask_count,   "Masks Found")
     with c4: render_metric("❌", st.session_state.no_mask_count,"No Mask")
     with c5:
         fps_val = f"{st.session_state.fps:.1f}"
-        render_metric("⚡", fps_val, "FPS")
+        render_metric("▣", fps_val, "FPS")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -789,7 +860,7 @@ def page_dashboard():
 
     with col_l:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown("### 🖥  Quick Start Guide")
+        st.markdown("### Quick Start Guide")
         st.markdown("""
         <div style="line-height:2.2;font-family:var(--font-mono);font-size:0.85rem;color:#8aaccc;">
         <b style="color:#00e5ff;">01</b> &nbsp; Open <b>Live Detection</b> tab<br>
@@ -804,12 +875,12 @@ def page_dashboard():
 
     with col_r:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown("### 📡  Detection Ratio")
+        st.markdown("### Detection Ratio")
         total = st.session_state.mask_count + st.session_state.no_mask_count
         mask_pct = (st.session_state.mask_count / total * 100) if total else 0
         no_mask_pct = 100 - mask_pct if total else 0
 
-        st.markdown(f"**😷 With Mask**")
+        st.markdown(f"**With Mask**")
         st.progress(mask_pct / 100)
         st.caption(f"{mask_pct:.1f}%  ({st.session_state.mask_count} detections)")
 
@@ -820,44 +891,44 @@ def page_dashboard():
 
     # Log feed
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown("### 📋  Detection Log")
+    st.markdown("### Detection Log")
     render_log_feed()
     st.markdown('</div>', unsafe_allow_html=True)
 
 
 def page_live():
-    st.markdown("## 📷  Live Webcam Detection")
+    st.markdown("## Live Webcam Detection")
 
     model, model_err = load_keras_model(MODEL_PATH)
     cascade, cas_err  = load_cascade(CASCADE_PATH)
 
     if model_err:
-        st.error(f"⚠️ Model: {model_err}")
+        st.error(f"Model: {model_err}")
     if cas_err:
-        st.error(f"⚠️ Cascade: {cas_err}")
+        st.error(f"Cascade: {cas_err}")
     if model_err or cas_err:
-        st.info("💡 Ensure `model/mask_model.h5` and `haarcascade/haarcascade_frontalface_default.xml` are in the project folder.")
+        st.info("Ensure `model/mask_model.h5` and `haarcascade/haarcascade_frontalface_default.xml` are in the project folder.")
         return
 
     # ── Controls ──
     ctrl1, ctrl2, ctrl3, ctrl4, ctrl5 = st.columns(5)
     with ctrl1:
         if not st.session_state.cam_running:
-            if st.button("▶  START CAMERA"):
+            if st.button("START CAMERA"):
                 st.session_state.cam_running = True
                 st.session_state.cam_paused  = False
                 add_log("Camera started", "info")
                 st.rerun()
     with ctrl2:
         if st.session_state.cam_running:
-            if st.button("⏹  STOP CAMERA"):
+            if st.button("STOP CAMERA"):
                 st.session_state.cam_running = False
                 st.session_state.cam_paused  = False
                 add_log("Camera stopped", "info")
                 st.rerun()
     with ctrl3:
         if st.session_state.cam_running:
-            label = "▶  RESUME" if st.session_state.cam_paused else "⏸  PAUSE"
+            label = "RESUME" if st.session_state.cam_paused else "PAUSE"
             if st.button(label):
                 st.session_state.cam_paused = not st.session_state.cam_paused
                 add_log("Detection paused" if st.session_state.cam_paused else "Detection resumed", "info")
@@ -867,10 +938,10 @@ def page_live():
             buf = io.BytesIO()
             if PIL_AVAILABLE:
                 Image.fromarray(cv2.cvtColor(st.session_state.screenshot, cv2.COLOR_BGR2RGB)).save(buf, format="PNG")
-            st.download_button("📸  DOWNLOAD", buf.getvalue(), "screenshot.png", "image/png")
+            st.download_button("DOWNLOAD", buf.getvalue(), "screenshot.png", "image/png")
     with ctrl5:
         if st.session_state.cam_running:
-            if st.button("🔄  RECONNECT"):
+            if st.button("RECONNECT"):
                 add_log("Reconnect requested", "info")
                 st.rerun()
 
@@ -901,14 +972,14 @@ def page_live():
         st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown("**📋 Live Log**")
+        st.markdown("**Live Log**")
         log_ph = st.empty()
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ── Main capture loop ──
     cap = cv2.VideoCapture(st.session_state.cam_index)
     if not cap.isOpened():
-        st.error(f"❌ Cannot open camera index {st.session_state.cam_index}. Try a different index in Settings.")
+        st.error(f"Cannot open camera index {st.session_state.cam_index}. Try a different index in Settings.")
         st.session_state.cam_running = False
         return
 
@@ -921,12 +992,12 @@ def page_live():
 
         ret, frame = cap.read()
         if not ret:
-            st.warning("⚠️ Frame capture failed — trying to reconnect...")
+            st.warning("Frame capture failed — trying to reconnect...")
             cap.release()
             time.sleep(1)
             cap = cv2.VideoCapture(st.session_state.cam_index)
             if not cap.isOpened():
-                st.error("❌ Camera reconnect failed.")
+                st.error("Camera reconnect failed.")
                 break
             continue
 
@@ -970,11 +1041,11 @@ def page_live():
         # Alert
         if no_mask_detected:
             alert_placeholder.markdown("""
-            <div class="alert-warning">🚨 WARNING — NO MASK DETECTED  |  Please wear a face mask!</div>
+            <div class="alert-warning">NO MASK DETECTED ❌ | Please wear a face mask.</div>
             """, unsafe_allow_html=True)
         else:
             alert_placeholder.markdown(
-                '<div class="alert-success">✅ COMPLIANT — All detected faces wearing masks</div>'
+                '<div class="alert-success">COMPLIANT — All detected faces wearing masks</div>'
                 if results else "", unsafe_allow_html=True
             )
 
@@ -983,7 +1054,7 @@ def page_live():
         conf = st.session_state.last_conf
         if lbl == "—":
             status_ph.markdown('<span class="badge-idle">● SCANNING...</span>', unsafe_allow_html=True)
-        elif "Mask 😷" in lbl:
+        elif "Mask" in lbl and "No Mask" not in lbl:
             status_ph.markdown('<span class="badge-mask">● MASK DETECTED</span>', unsafe_allow_html=True)
         else:
             status_ph.markdown('<span class="badge-nomask">● NO MASK DETECTED</span>', unsafe_allow_html=True)
@@ -1016,7 +1087,7 @@ def page_live():
 
 
 def page_upload():
-    st.markdown("## 📂  Upload Media")
+    st.markdown("## Upload Media")
 
     model, model_err = load_keras_model(MODEL_PATH)
     cascade, cas_err  = load_cascade(CASCADE_PATH)
@@ -1025,7 +1096,7 @@ def page_upload():
         st.error("Model or Cascade not loaded. Check file paths.")
         return
 
-    tab_img, tab_vid = st.tabs(["🖼  Image", "🎬  Video"])
+    tab_img, tab_vid = st.tabs(["Image", "Video"])
 
     # ── Image tab ──
     with tab_img:
@@ -1040,7 +1111,7 @@ def page_upload():
                 st.error("Impossible de lire cette image. Essaie avec une image JPG ou PNG standard.")
                 return
 
-            with st.spinner("🔍 Running detection..."):
+            with st.spinner("Running detection..."):
                 annotated, results = preprocess_image_for_prediction(
                     img_bgr, cascade, model, st.session_state.conf_threshold
                 )
@@ -1056,23 +1127,23 @@ def page_upload():
             # Results
             if results:
                 st.markdown('<div class="neon-sep"></div>', unsafe_allow_html=True)
-                st.markdown(f"**🔍 Found {len(results)} face(s):**")
+                st.markdown(f"**Found {len(results)} face(s):**")
                 for i, r in enumerate(results, 1):
-                    badge = "badge-mask" if "Mask 😷" in r["label"] else "badge-nomask"
+                    badge = "badge-mask" if ("Mask" in r["label"] and "No Mask" not in r["label"]) else "badge-nomask"
                     st.markdown(
                         f'Face {i}: <span class="{badge}">{r["label"]}</span> '
                         f'— confidence <b>{r["conf"]*100:.1f}%</b>',
                         unsafe_allow_html=True
                     )
                     if "No Mask" in r["label"]:
-                        st.markdown('<div class="alert-warning">⚠️ No mask detected on this face!</div>', unsafe_allow_html=True)
+                        st.markdown('<div class="alert-warning">No mask detected on this face!</div>', unsafe_allow_html=True)
             else:
                 st.info("No faces detected in the image.")
 
             # Download
             is_success, buffer = cv2.imencode(".png", annotated)
             if is_success:
-                st.download_button("📥 Download Annotated Image", buffer.tobytes(),
+                st.download_button("Download Annotated Image", buffer.tobytes(),
                                    "detected.png", "image/png")
 
     # ── Video tab ──
@@ -1117,23 +1188,23 @@ def page_upload():
             out.release()
 
             with open(out_path, "rb") as f:
-                st.download_button("📥 Download Processed Video", f.read(),
+                st.download_button("Download Processed Video", f.read(),
                                    "processed_video.avi", "video/avi")
             st.success("✅ Video processing complete!")
 
 
 def page_analytics():
-    st.markdown("## 📊  Analytics Dashboard")
+    st.markdown("## Analytics Dashboard")
 
     total = st.session_state.mask_count + st.session_state.no_mask_count
 
     # KPI row
     k1, k2, k3, k4 = st.columns(4)
-    with k1: render_metric("👤", st.session_state.total_faces,  "Total Faces")
-    with k2: render_metric("😷", st.session_state.mask_count,   "With Mask")
+    with k1: render_metric("○", st.session_state.total_faces,  "Total Faces")
+    with k2: render_metric("◉", st.session_state.mask_count,   "With Mask")
     with k3: render_metric("❌", st.session_state.no_mask_count, "No Mask")
     mask_rate = (st.session_state.mask_count / total * 100) if total else 0
-    with k4: render_metric("📈", f"{mask_rate:.1f}%", "Compliance Rate")
+    with k4: render_metric("▧", f"{mask_rate:.1f}%", "Compliance Rate")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -1152,7 +1223,7 @@ def page_analytics():
     # Pie chart
     with col_pie:
         fig_pie = go.Figure(go.Pie(
-            labels=["Mask 😷", "No Mask ❌"],
+            labels=["Mask ◉", "No Mask ❌"],
             values=[st.session_state.mask_count, st.session_state.no_mask_count],
             hole=0.55,
             marker=dict(colors=["#00ff88", "#ff2d55"],
@@ -1174,7 +1245,7 @@ def page_analytics():
     # Bar chart
     with col_bar:
         fig_bar = go.Figure(go.Bar(
-            x=["Mask 😷", "No Mask ❌"],
+            x=["Mask ◉", "No Mask ❌"],
             y=[st.session_state.mask_count, st.session_state.no_mask_count],
             marker=dict(
                 color=["rgba(0,255,136,0.7)", "rgba(255,45,85,0.7)"],
@@ -1225,7 +1296,7 @@ def page_analytics():
     st.plotly_chart(fig_gauge, use_container_width=True)
 
     # Reset button
-    if st.button("🔄  Reset Statistics"):
+    if st.button("Reset Statistics"):
         for k in ["total_frames","total_faces","mask_count","no_mask_count","fps"]:
             st.session_state[k] = 0
         st.session_state.log_entries.clear()
@@ -1236,14 +1307,14 @@ def page_analytics():
 
 
 def page_model():
-    st.markdown("## 🧠  AI Model Information")
+    st.markdown("## AI Model Information")
 
     model, model_err = load_keras_model(MODEL_PATH)
 
     col_a, col_b = st.columns(2)
     with col_a:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown("### 🏗  Architecture")
+        st.markdown("### Architecture")
         st.markdown("""
         | Property | Value |
         |---|---|
@@ -1259,7 +1330,7 @@ def page_model():
 
     with col_b:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown("### 🔬  Face Detection")
+        st.markdown("### Face Detection")
         st.markdown("""
         | Property | Value |
         |---|---|
@@ -1275,7 +1346,7 @@ def page_model():
     # Model summary
     if model and TF_AVAILABLE:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown("### 📋  Model Summary")
+        st.markdown("### Model Summary")
         buf = io.StringIO()
         model.summary(print_fn=lambda x: buf.write(x + "\n"))
         summary_str = buf.getvalue()
@@ -1285,7 +1356,7 @@ def page_model():
         st.info(f"Load model at `{MODEL_PATH}` to see architecture summary.")
 
     # MobileNetV2 explanation
-    with st.expander("📖 How MobileNetV2 Works"):
+    with st.expander("How MobileNetV2 Works"):
         st.markdown("""
         **MobileNetV2** is a lightweight convolutional neural network designed for mobile and embedded vision applications.
 
@@ -1305,7 +1376,7 @@ def page_model():
         """)
 
     # Training info placeholder
-    with st.expander("📈 Training Details"):
+    with st.expander("Training Details"):
         if PLOTLY_AVAILABLE:
             # Simulated curves for demo
             epochs = list(range(1, 21))
@@ -1333,10 +1404,10 @@ def page_model():
 
 
 def page_settings():
-    st.markdown("## ⚙️  Settings")
+    st.markdown("## Settings")
 
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown("### 🎚  Detection Thresholds")
+    st.markdown("### Detection Thresholds")
     new_thresh = st.slider("Confidence Threshold", 0.30, 0.99,
                            st.session_state.conf_threshold, 0.01)
     st.session_state.conf_threshold = new_thresh
@@ -1344,14 +1415,14 @@ def page_settings():
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown("### 📷  Camera")
+    st.markdown("### Camera")
     new_cam = st.number_input("Camera Index", 0, 10, st.session_state.cam_index, 1)
     st.session_state.cam_index = new_cam
     st.caption("0 = default webcam, 1 = secondary camera, etc.")
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown("### 📁  File Paths")
+    st.markdown("### File Paths")
     st.code(f"Model   : {os.path.abspath(MODEL_PATH)}\nCascade : {os.path.abspath(CASCADE_PATH)}")
     model_ok   = "✅ Found" if os.path.exists(MODEL_PATH) else "❌ Missing"
     cascade_ok = "✅ Found" if os.path.exists(CASCADE_PATH) else "❌ Missing"
@@ -1367,22 +1438,19 @@ def render_footer():
                     color:rgba(0,229,255,0.7);margin-bottom:0.6rem;">
             MASKSENSE AI &nbsp;·&nbsp; Face Mask Detection System
         </div>
-        <div style="margin-bottom:0.8rem;color:#3a4a6a;">
-            Developed for AI & Deep Learning Portfolio · University Final Year Project
-        </div>
         <div class="tech-pills">
             <span>Python</span><span>Streamlit</span><span>TensorFlow</span>
             <span>Keras</span><span>OpenCV</span><span>MobileNetV2</span>
             <span>Plotly</span><span>NumPy</span>
         </div>
         <div style="margin-top:1rem;color:#2a3a5a;">
-            © 2024 MaskSense AI · All rights reserved
+            © 2026 MaskSense AI · All rights reserved
         </div>
     </div>
     """, unsafe_allow_html=True)
 
 def page_browser_camera():
-    st.markdown("## 📷 Camera Detection")
+    st.markdown("## Live Detection")
 
     model, model_err = load_keras_model(MODEL_PATH)
     cascade, cas_err = load_cascade(CASCADE_PATH)
@@ -1391,7 +1459,7 @@ def page_browser_camera():
         st.error("Model or Cascade not loaded.")
         return
 
-    img_file = st.camera_input("Take a picture")
+    img_file = st.camera_input("Take Photo")
 
     if img_file is not None:
         bytes_data = img_file.getvalue()
