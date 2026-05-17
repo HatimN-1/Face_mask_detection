@@ -6,9 +6,6 @@ venv/
 dataset/
 dataset_split/
 test/
-*.jpg
-*.jpeg
-*.png
 *.mp4
 *.avi# created by virtualenv automatically
 .venv/etc
